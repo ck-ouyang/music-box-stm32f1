@@ -30,12 +30,22 @@ void RCC_Configuration(void)
 
 void GPIO_Configuration(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure;
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB	| RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, ENABLE);
+	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
 
+    GPIO_InitTypeDef GPIO_InitStructure;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    //初始化拨码开关输入IO
+	GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOB, &GPIO_InitStructure);
+ 	GPIO_ResetBits(GPIOB, GPIO_Pin_4);
+ 	GPIOB -> ODR |= 0b11111111111111111111111111000111;
 }
 
 void TIM2_IRQHandler()
@@ -75,6 +85,7 @@ void TIMER_Config(void)
 //PWM输出初始化
 //arr：自动重装值
 //psc：时钟预分频数
+
 void TIM3_PWM_Init(u16 arr, u16 psc)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -130,10 +141,10 @@ void vTaskFunction(void *pvParameters)
     {
         debug("led on ");
             GPIO_SetBits(GPIOC, GPIO_Pin_13);
-        vTaskDelay(100);
+        vTaskDelay(50);
         debug("led off ");
             GPIO_ResetBits(GPIOC, GPIO_Pin_13);
-        vTaskDelay(100);
+        vTaskDelay(950);
     }
 }
 
@@ -200,8 +211,7 @@ int main()
     xTaskCreate(vPlayTask, "Task play", 512, NULL, 1, NULL);
     vTaskStartScheduler();
 
-    while (1)
-        ;
+    while (1);
 
     return 0;
 }

@@ -1,10 +1,20 @@
+#include "stm32f10x.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "SynthCore.h"
 #include "Player.h"
 
-extern unsigned char Score[];
+extern unsigned char Score0[];
+extern unsigned char Score1[];
+extern unsigned char Score2[];
+extern unsigned char Score3[];
+extern unsigned char Score4[];
+extern unsigned char Score5[];
+extern unsigned char Score6[];
+extern unsigned char Score7[];
+
+unsigned char *ScoreSelected;
 
 void Player32kProc(Player *player)
 {
@@ -38,7 +48,7 @@ void PlayerProcess(Player *player)
                 }
                 else
                 {
-                    NoteOnAsm(&(player->mainSynthesizer), temp);
+                    NoteOnAsm(&(player->mainSynthesizer), temp - 3);
                 }
             } while ((temp & 0x80) == 0);
             
@@ -61,22 +71,37 @@ void PlayUpdateNextScoreTick(Player *player)
     player->lastScoreTick = tempU32;
 }
 
+void SelectScore(){
+	switch((GPIOB -> IDR >> 3 & 0b111)){
+		case 0: ScoreSelected = Score0; break;
+		case 1: ScoreSelected = Score1; break;
+		case 2: ScoreSelected = Score2; break;
+		case 3: ScoreSelected = Score3; break;
+		case 4: ScoreSelected = Score4; break;
+		case 5: ScoreSelected = Score5; break;
+		case 6: ScoreSelected = Score6; break;
+		case 7: ScoreSelected = Score7; break;
+	}
+}
+
 void PlayerPlay(Player *player)
 {
+	SelectScore();
     player->currentTick = 0;
     player->lastScoreTick = 0;
     player->decayGenTick = 0;
-    player->scorePointer = Score;
+    player->scorePointer = ScoreSelected;
     PlayUpdateNextScoreTick(player);
     player->status = STATUS_PLAYING;
 }
 
 void PlayerInit(Player *player)
 {
+	SelectScore();
     player->status = STATUS_STOP;
     player->currentTick = 0;
     player->lastScoreTick = 0;
     player->decayGenTick = 0;
-    player->scorePointer = Score;
+    player->scorePointer = ScoreSelected;
     SynthInit(&(player->mainSynthesizer));
 }
